@@ -1,0 +1,621 @@
+openapi: 3.1.0
+info:
+  title: Анализатор рисков оттока
+  description: API системы анализа риска оттока клиентов.
+  version: 0.1.0
+paths:
+  /api/v1/source/snapshot:
+    put:
+      tags:
+      - source
+      summary: Заменить снимок данных и пересчитать оценки
+      operationId: put_snapshot_api_v1_source_snapshot_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SnapshotInput'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: integer
+                type: object
+                title: Response Put Snapshot Api V1 Source Snapshot Put
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/source/presets/{name}:
+    post:
+      tags:
+      - source
+      summary: 'Загрузить встроенный набор: official, demo или demo-step2 (демо через сутки)'
+      description: Load a bundled dataset from data/<name>.json.
+      operationId: load_preset_api_v1_source_presets__name__post
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          enum:
+          - official
+          - demo
+          - demo-step2
+          type: string
+          title: Name
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+                title: Response Load Preset Api V1 Source Presets  Name  Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/customers:
+    get:
+      tags:
+      - customers
+      summary: Список клиентов с оценкой риска
+      operationId: list_customers_api_v1_customers_get
+      parameters:
+      - name: level
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+          title: Level
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Q
+      - name: sort_by
+        in: query
+        required: false
+        schema:
+          enum:
+          - id
+          - email
+          - balance
+          - total_replenished
+          - score
+          - expected_loss
+          type: string
+          default: id
+          title: Sort By
+      - name: order
+        in: query
+        required: false
+        schema:
+          enum:
+          - asc
+          - desc
+          type: string
+          default: asc
+          title: Order
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          title: Page
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Size
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response List Customers Api V1 Customers Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/customers/{customer_id}:
+    get:
+      tags:
+      - customers
+      summary: Карточка клиента
+      operationId: get_customer_api_v1_customers__customer_id__get
+      parameters:
+      - name: customer_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Customer Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Customer Api V1 Customers  Customer Id  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/analytics/summary:
+    get:
+      tags:
+      - analytics
+      summary: Сводка для дашборда (те же числа, что в /metrics)
+      operationId: get_summary_api_v1_analytics_summary_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Get Summary Api V1 Analytics Summary Get
+  /api/v1/analytics/churn-timeline:
+    get:
+      tags:
+      - analytics
+      summary: 'График оттока: факт, оценка, прогноз (в услугах)'
+      operationId: get_churn_timeline_api_v1_analytics_churn_timeline_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Get Churn Timeline Api V1 Analytics Churn Timeline Get
+  /api/v1/model/settings:
+    get:
+      tags:
+      - model
+      summary: Настройки модели, значения по умолчанию и описания признаков
+      operationId: get_settings_api_v1_model_settings_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Get Settings Api V1 Model Settings Get
+    patch:
+      tags:
+      - model
+      summary: Частично изменить настройки и пересчитать оценки
+      operationId: patch_settings_api_v1_model_settings_patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              additionalProperties: true
+              type: object
+              title: Payload
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Patch Settings Api V1 Model Settings Patch
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/events:
+    get:
+      tags:
+      - events
+      summary: 'SSE-поток: событие recomputed после каждого пересчёта'
+      operationId: stream_events_api_v1_events_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /metrics:
+    get:
+      tags:
+      - metrics
+      summary: Метрики Prometheus (сессия или Bearer METRICS_TOKEN)
+      operationId: getMetrics
+      parameters:
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /metics:
+    get:
+      tags:
+      - metrics
+      summary: Алиас /metrics (написание из ТЗ)
+      operationId: getMetricsTypoAlias
+      parameters:
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/login:
+    post:
+      tags:
+      - auth
+      summary: 'Вход: ставит cookie сессии'
+      description: После 5 неудачных попыток за 5 минут с одного адреса для этого логина отвечает 429.
+      operationId: login_api_v1_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Login Api V1 Auth Login Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/me:
+    get:
+      tags:
+      - auth
+      summary: Текущий пользователь
+      operationId: get_current_user_api_v1_auth_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Get Current User Api V1 Auth Me Get
+  /api/v1/auth/logout:
+    post:
+      tags:
+      - auth
+      summary: Выход
+      operationId: logout_api_v1_auth_logout_post
+      responses:
+        '204':
+          description: Successful Response
+  /healthz:
+    get:
+      tags:
+      - health
+      summary: Проверка доступности
+      operationId: health_check_healthz_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Health Check Healthz Get
+components:
+  schemas:
+    AccountInput:
+      properties:
+        id:
+          type: integer
+          minimum: 1.0
+          title: Id
+        email:
+          type: string
+          minLength: 1
+          title: Email
+        balance:
+          type: integer
+          minimum: 0.0
+          title: Balance
+        withdrawBalance:
+          type: integer
+          minimum: 0.0
+          title: Withdrawbalance
+        totalReplenished:
+          type: integer
+          minimum: 0.0
+          title: Totalreplenished
+        bonusBalance:
+          type: integer
+          minimum: 0.0
+          title: Bonusbalance
+        bonusState:
+          type: string
+          enum:
+          - locked
+          - unlocked
+          title: Bonusstate
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - email
+      - balance
+      - withdrawBalance
+      - totalReplenished
+      - bonusBalance
+      - bonusState
+      title: AccountInput
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    LoginInput:
+      properties:
+        login:
+          type: string
+          minLength: 1
+          title: Login
+        password:
+          type: string
+          minLength: 1
+          title: Password
+      additionalProperties: false
+      type: object
+      required:
+      - login
+      - password
+      title: LoginInput
+    ServiceInput:
+      properties:
+        id:
+          type: integer
+          minimum: 1.0
+          title: Id
+        name:
+          type: string
+          pattern: ^[A-Za-z0-9-]+$
+          title: Name
+        ownerId:
+          type: integer
+          minimum: 1.0
+          title: Ownerid
+        paymentTerm:
+          type: string
+          enum:
+          - hour
+          - week
+          - month
+          - quarter_year
+          - half_year
+          - year
+          title: Paymentterm
+        autoProlong:
+          type: boolean
+          title: Autoprolong
+        createdAt:
+          type: string
+          format: date-time
+          title: Createdat
+        expiresAt:
+          type: string
+          format: date-time
+          title: Expiresat
+        status:
+          type: string
+          enum:
+          - active
+          - blocked
+          - deleted
+          - suspended
+          - prolong_wait
+          title: Status
+        price:
+          type: integer
+          minimum: 0.0
+          title: Price
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - name
+      - ownerId
+      - paymentTerm
+      - autoProlong
+      - createdAt
+      - expiresAt
+      - status
+      - price
+      title: ServiceInput
+    SnapshotInput:
+      properties:
+        capturedAt:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Capturedat
+        accounts:
+          items:
+            $ref: '#/components/schemas/AccountInput'
+          type: array
+          title: Accounts
+        services:
+          items:
+            $ref: '#/components/schemas/ServiceInput'
+          type: array
+          title: Services
+        transactions:
+          items:
+            $ref: '#/components/schemas/TransactionInput'
+          type: array
+          title: Transactions
+      additionalProperties: false
+      type: object
+      required:
+      - accounts
+      - services
+      - transactions
+      title: SnapshotInput
+    TransactionInput:
+      properties:
+        id:
+          type: integer
+          minimum: 1.0
+          title: Id
+        amount:
+          type: integer
+          maximum: 1000.0
+          minimum: 0.0
+          title: Amount
+        status:
+          type: string
+          enum:
+          - not_performed
+          - performed
+          title: Status
+        performedAt:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Performedat
+        createdAt:
+          type: string
+          format: date-time
+          title: Createdat
+        type:
+          type: string
+          enum:
+          - prolong
+          - order
+          title: Type
+        serviceId:
+          type: integer
+          minimum: 1.0
+          title: Serviceid
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - amount
+      - status
+      - performedAt
+      - createdAt
+      - type
+      - serviceId
+      title: TransactionInput
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
